@@ -1,0 +1,50 @@
+(node:13764) Warning: Setting the NODE_TLS_REJECT_UNAUTHORIZED environment variable to '0' makes TLS connections and HTTPS requests insecure by disabling certificate verification.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Tool "get_branch" is defined in multiple toolsets: "merge_requests" and "branches"
+Tool "list_branches" is defined in multiple toolsets: "merge_requests" and "branches"
+[32mINFO[39m [15:12:04.177] (16764): [36mRemote authorization enabled: tokens will be read from HTTP headers[39m
+[32mINFO[39m [15:12:04.177] (16764): [36mConfiguration validation passed[39m
+[32mINFO[39m [15:12:04.178] (16764): [36mInitializing server with transport mode:[39m
+[33mWARN[39m [15:12:04.178] (16764): [36mStarting GitLab MCP Server with Streamable HTTP transport[39m
+[32mINFO[39m [15:12:04.181] (16764): [36mConfigured GitLab API URLs: https://np-gitlab.swedencentral.cloudapp.azure.com/api/v4[39m
+[32mINFO[39m [15:12:04.181] (16764): [36mDefault GitLab API URL: https://np-gitlab.swedencentral.cloudapp.azure.com/api/v4[39m
+[32mINFO[39m [15:12:04.188] (16764): [36mGitLab MCP Server running with Streamable HTTP transport[39m
+[32mINFO[39m [15:12:04.188] (16764): [36m[32mEndpoint: http://127.0.0.1:3002/mcp[0m[39m
+[33mWARN[39m [15:17:08.097] (16764): [36mStreamable HTTP session initialized: 6ed39173-30c2-4464-a495-e09d07353132[39m
+[32mINFO[39m [15:17:08.097] (16764): [36mSession 6ed39173-30c2-4464-a495-e09d07353132: stored Authorization header[39m
+(node:26860) Warning: Setting the NODE_TLS_REJECT_UNAUTHORIZED environment variable to '0' makes TLS connections and HTTPS requests insecure by disabling certificate verification.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Tool "get_branch" is defined in multiple toolsets: "merge_requests" and "branches"
+Tool "list_branches" is defined in multiple toolsets: "merge_requests" and "branches"
+[32mINFO[39m [15:31:27.309] (18668): [36mRemote authorization enabled: tokens will be read from HTTP headers[39m
+[32mINFO[39m [15:31:27.309] (18668): [36mConfiguration validation passed[39m
+[32mINFO[39m [15:31:27.309] (18668): [36mInitializing server with transport mode:[39m
+[33mWARN[39m [15:31:27.309] (18668): [36mStarting GitLab MCP Server with Streamable HTTP transport[39m
+[32mINFO[39m [15:31:27.312] (18668): [36mConfigured GitLab API URLs: https://np-gitlab.swedencentral.cloudapp.azure.com/api/v4[39m
+[32mINFO[39m [15:31:27.312] (18668): [36mDefault GitLab API URL: https://np-gitlab.swedencentral.cloudapp.azure.com/api/v4[39m
+[32mINFO[39m [15:31:27.317] (18668): [36mGitLab MCP Server running with Streamable HTTP transport[39m
+[32mINFO[39m [15:31:27.317] (18668): [36m[32mEndpoint: http://127.0.0.1:3002/mcp[0m[39m
+^C(node:32312) Warning: Setting the NODE_TLS_REJECT_UNAUTHORIZED environment variable to '0' makes TLS connections and HTTPS requests insecure by disabling certificate verification.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Tool "get_branch" is defined in multiple toolsets: "merge_requests" and "branches"
+Tool "list_branches" is defined in multiple toolsets: "merge_requests" and "branches"
+[32mINFO[39m [15:31:42.714] (38600): [36mRemote authorization enabled: tokens will be read from HTTP headers[39m
+[32mINFO[39m [15:31:42.714] (38600): [36mConfiguration validation passed[39m
+[32mINFO[39m [15:31:42.714] (38600): [36mInitializing server with transport mode:[39m
+[33mWARN[39m [15:31:42.714] (38600): [36mStarting GitLab MCP Server with Streamable HTTP transport[39m
+[32mINFO[39m [15:31:42.717] (38600): [36mConfigured GitLab API URLs: https://np-gitlab.swedencentral.cloudapp.azure.com/api/v4[39m
+[32mINFO[39m [15:31:42.717] (38600): [36mDefault GitLab API URL: https://np-gitlab.swedencentral.cloudapp.azure.com/api/v4[39m
+[32mINFO[39m [15:31:42.723] (38600): [36mGitLab MCP Server running with Streamable HTTP transport[39m
+[32mINFO[39m [15:31:42.723] (38600): [36m[32mEndpoint: http://127.0.0.1:3002/mcp[0m[39m
+^C(node:37552) Warning: Setting the NODE_TLS_REJECT_UNAUTHORIZED environment variable to '0' makes TLS connections and HTTPS requests insecure by disabling certificate verification.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Tool "get_branch" is defined in multiple toolsets: "merge_requests" and "branches"
+Tool "list_branches" is defined in multiple toolsets: "merge_requests" and "branches"
+[32mINFO[39m [15:32:41.371] (23580): [36mRemote authorization enabled: tokens will be read from HTTP headers[39m
+[32mINFO[39m [15:32:41.371] (23580): [36mConfiguration validation passed[39m
+[32mINFO[39m [15:32:41.371] (23580): [36mInitializing server with transport mode:[39m
+[33mWARN[39m [15:32:41.371] (23580): [36mStarting GitLab MCP Server with Streamable HTTP transport[39m
+[32mINFO[39m [15:32:41.375] (23580): [36mConfigured GitLab API URLs: https://np-gitlab.swedencentral.cloudapp.azure.com/api/v4[39m
+[32mINFO[39m [15:32:41.375] (23580): [36mDefault GitLab API URL: https://np-gitlab.swedencentral.cloudapp.azure.com/api/v4[39m
+[32mINFO[39m [15:32:41.381] (23580): [36mGitLab MCP Server running with Streamable HTTP transport[39m
+[32mINFO[39m [15:32:41.381] (23580): [36m[32mEndpoint: http://127.0.0.1:3002/mcp[0m[39m

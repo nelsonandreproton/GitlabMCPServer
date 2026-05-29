@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>mcp-gitlab-gateway — Azure VM Deployment Guide</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0f1117; color: #e2e8f0; line-height: 1.7; }
+    .header { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-bottom: 1px solid #334155; padding: 40px 48px; }
+    .header h1 { font-size: 1.8rem; font-weight: 700; color: #f8fafc; margin-bottom: 6px; }
+    .header p { color: #94a3b8; font-size: 1rem; }
+    .badge { display: inline-block; background: #1d4ed8; color: #bfdbfe; font-size: 0.75rem; font-weight: 600; padding: 2px 10px; border-radius: 20px; margin-left: 12px; vertical-align: middle; }
+    .container { max-width: 860px; margin: 0 auto; padding: 40px 24px 80px; }
+    .arch-box { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 24px 28px; margin-bottom: 36px; font-family: monospace; font-size: 0.88rem; color: #94a3b8; line-height: 1.9; }
+    .arch-box .highlight { color: #38bdf8; }
+    .step { margin-bottom: 48px; }
+    .step-header { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+    .step-num { background: #1d4ed8; color: #fff; font-weight: 700; font-size: 0.9rem; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .step-title { font-size: 1.15rem; font-weight: 600; color: #f1f5f9; }
+    .step p { color: #94a3b8; margin-bottom: 12px; }
+    .step p strong { color: #cbd5e1; }
+    pre { background: #0d1117; border: 1px solid #334155; border-radius: 8px; padding: 18px 20px; overflow-x: auto; margin: 12px 0 16px; position: relative; }
+    code { font-family: "Fira Code", "Cascadia Code", monospace; font-size: 0.85rem; color: #e2e8f0; }
+    pre code { color: #e2e8f0; }
+    .comment { color: #6b7280; }
+    .cmd { color: #a3e635; }
+    .flag { color: #38bdf8; }
+    .str { color: #f59e0b; }
+    .kw { color: #c084fc; }
+    .file-block { background: #0d1117; border: 1px solid #334155; border-radius: 8px; padding: 18px 20px; margin: 12px 0 16px; }
+    .file-label { font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+    .note { background: #1e3a5f; border-left: 3px solid #3b82f6; border-radius: 0 6px 6px 0; padding: 12px 16px; margin: 12px 0; color: #93c5fd; font-size: 0.9rem; }
+    .warn { background: #451a03; border-left: 3px solid #f59e0b; border-radius: 0 6px 6px 0; padding: 12px 16px; margin: 12px 0; color: #fcd34d; font-size: 0.9rem; }
+    .success { background: #052e16; border-left: 3px solid #22c55e; border-radius: 0 6px 6px 0; padding: 12px 16px; margin: 12px 0; color: #86efac; font-size: 0.9rem; }
+    .divider { border: none; border-top: 1px solid #1e293b; margin: 48px 0; }
+    h3 { color: #cbd5e1; font-size: 0.95rem; font-weight: 600; margin: 20px 0 8px; }
+    ul { color: #94a3b8; padding-left: 20px; margin-bottom: 12px; }
+    ul li { margin-bottom: 4px; }
+    .toc { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 20px 24px; margin-bottom: 40px; }
+    .toc h2 { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; margin-bottom: 12px; }
+    .toc ol { padding-left: 20px; }
+    .toc li { color: #94a3b8; margin-bottom: 4px; font-size: 0.9rem; }
+    .toc a { color: #60a5fa; text-decoration: none; }
+    .toc a:hover { text-decoration: underline; }
+    .env-table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; font-size: 0.85rem; }
+    .env-table th { background: #1e293b; color: #64748b; font-weight: 600; text-align: left; padding: 8px 12px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .env-table td { padding: 8px 12px; border-top: 1px solid #1e293b; color: #94a3b8; font-family: monospace; font-size: 0.82rem; }
+    .env-table td:first-child { color: #38bdf8; }
+    .env-table tr:hover td { background: #1e293b22; }
+    .final-url { background: #0f2a1a; border: 1px solid #166534; border-radius: 8px; padding: 16px 20px; font-family: monospace; font-size: 0.9rem; color: #4ade80; margin: 16px 0; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>mcp-gitlab-gateway <span class="badge">Azure VM</span></h1>
+  <p>Step-by-step deployment guide — same VM as the self-hosted GitLab instance</p>
+</div>
+
+<div class="container">
+
+  <div class="arch-box">
+    <span class="highlight">Notion / Claude</span>  →  HTTPS :443  →  <span class="highlight">nginx</span> (TLS termination)<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="highlight">server.js</span> :8808 (gateway — injects token)<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="highlight">@zereight/mcp-gitlab</span> :3002 (MCP upstream)<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="highlight">GitLab API</span> (localhost, same VM)
+  </div>
+
+  <div class="toc">
+    <h2>Steps</h2>
+    <ol>
+      <li><a href="#s1">SSH into the VM &amp; install Node.js</a></li>
+      <li><a href="#s2">Clone the repository</a></li>
+      <li><a href="#s3">Create the environment file</a></li>
+      <li><a href="#s4">Install the MCP package</a></li>
+      <li><a href="#s5">Create systemd services</a></li>
+      <li><a href="#s6">Configure nginx reverse proxy</a></li>
+      <li><a href="#s7">Open the Azure firewall port</a></li>
+      <li><a href="#s8">Verify end-to-end</a></li>
+    </ol>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="step" id="s1">
+    <div class="step-header">
+      <div class="step-num">1</div>
+      <div class="step-title">SSH into the VM &amp; install Node.js</div>
+    </div>
+    <p>Connect to the Azure VM. The GitLab instance is already running here.</p>
+    <pre><code><span class="cmd">ssh</span> hetzner</code></pre>
+    <p>Check if Node.js is already installed:</p>
+    <pre><code><span class="cmd">node</span> <span class="flag">--version</span>   <span class="comment"># need v18 or newer</span>
+<span class="cmd">npm</span> <span class="flag">--version</span></code></pre>
+    <p>If Node.js is missing or older than v18, install via NodeSource:</p>
+    <pre><code><span class="cmd">curl</span> <span class="flag">-fsSL</span> https://deb.nodesource.com/setup_22.x <span class="flag">|</span> sudo <span class="cmd">bash</span> <span class="flag">-</span>
+sudo <span class="cmd">apt-get</span> install <span class="flag">-y</span> nodejs</code></pre>
+    <p>Verify:</p>
+    <pre><code><span class="cmd">node</span> <span class="flag">--version</span>   <span class="comment"># should print v22.x.x</span></code></pre>
+  </div>
+
+  <hr class="divider">
+
+  <!-- STEP 2 -->
+  <div class="step" id="s2">
+    <div class="step-header">
+      <div class="step-num">2</div>
+      <div class="step-title">Clone the repository</div>
+    </div>
+    <p>Clone into <code>/opt/mcp-gitlab-gateway</code> (or any path you prefer).</p>
+    <pre><code>sudo <span class="cmd">git</span> clone https://github.com/YOUR_ORG/GitlabMCPServer.git /opt/mcp-gitlab-gateway
+sudo <span class="cmd">chown</span> <span class="flag">-R</span> $USER:$USER /opt/mcp-gitlab-gateway
+<span class="cmd">cd</span> /opt/mcp-gitlab-gateway</code></pre>
+    <div class="note">If the repo is on your self-hosted GitLab, replace the URL with your internal GitLab URL. Make sure the VM can reach it — it's on the same VNet so it should work directly.</div>
+    <p>If you haven't pushed to GitLab yet, you can also copy the files manually:</p>
+    <pre><code><span class="comment"># From your Windows machine (run in PowerShell):</span>
+<span class="cmd">scp</span> C:\dev\GitlabMCPServer\server.js hetzner:/opt/mcp-gitlab-gateway/
+<span class="cmd">scp</span> C:\dev\GitlabMCPServer\test-body.json hetzner:/opt/mcp-gitlab-gateway/</code></pre>
+  </div>
+
+  <hr class="divider">
+
+  <!-- STEP 3 -->
+  <div class="step" id="s3">
+    <div class="step-header">
+      <div class="step-num">3</div>
+      <div class="step-title">Create the environment file</div>
+    </div>
+    <p>Create <code>/opt/mcp-gitlab-gateway/.env</code> — this is used by both systemd services.</p>
+    <pre><code>sudo <span class="cmd">nano</span> /opt/mcp-gitlab-gateway/.env</code></pre>
+    <div class="file-block">
+      <div class="file-label">/opt/mcp-gitlab-gateway/.env</div>
+      <pre style="margin:0; border:none; padding:0; background:transparent;"><code><span class="comment"># GitLab API — internal URL (same VNet, no need to go through nginx)</span>
+GITLAB_API_URL=https://np-gitlab.swedencentral.cloudapp.azure.com/api/v4
+
+<span class="comment"># Required to bypass self-signed cert on GitLab</span>
+NODE_TLS_REJECT_UNAUTHORIZED=0
+
+<span class="comment"># Placeholder — actual token comes per-request via Authorization header</span>
+GITLAB_PERSONAL_ACCESS_TOKEN=placeholder
+
+<span class="comment"># Upstream config (mcp-gitlab process)</span>
+STREAMABLE_HTTP=true
+REMOTE_AUTHORIZATION=true
+HOST=127.0.0.1
+PORT=3002
+
+<span class="comment"># Gateway config (server.js)</span>
+GATEWAY_PORT=8808
+UPSTREAM_PORT=3002</code></pre>
+    </div>
+    <p>Lock down permissions — this file contains sensitive config:</p>
+    <pre><code><span class="cmd">chmod</span> 600 /opt/mcp-gitlab-gateway/.env</code></pre>
+  </div>
+
+  <hr class="divider">
+
+  <!-- STEP 4 -->
+  <div class="step" id="s4">
+    <div class="step-header">
+      <div class="step-num">4</div>
+      <div class="step-title">Install the MCP package</div>
+    </div>
+    <p>Pre-install <code>@zereight/mcp-gitlab</code> so it doesn't need to be fetched at runtime. This avoids the cold-start delay and works offline.</p>
+    <pre><code><span class="cmd">cd</span> /opt/mcp-gitlab-gateway
+<span class="cmd">npm</span> install @zereight/mcp-gitlab</code></pre>
+    <p>Then update <code>/etc/systemd/system/mcp-gitlab-upstream.service</code> (next step) to run the local binary instead of <code>npx</code>.</p>
+  </div>
+
+  <hr class="divider">
+
+  <!-- STEP 5 -->
+  <div class="step" id="s5">
+    <div class="step-header">
+      <div class="step-num">5</div>
+      <div class="step-title">Create systemd services</div>
+    </div>
+    <p>Two services: one for the MCP upstream, one for the gateway. They must start in order.</p>
+
+    <h3>Service 1 — MCP upstream</h3>
+    <pre><code>sudo <span class="cmd">nano</span> /etc/systemd/system/mcp-gitlab-upstream.service</code></pre>
+    <div class="file-block">
+      <div class="file-label">/etc/systemd/system/mcp-gitlab-upstream.service</div>
+      <pre style="margin:0; border:none; padding:0; background:transparent;"><code>[Unit]
+Description=GitLab MCP Upstream (streamable-http)
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/opt/mcp-gitlab-gateway
+EnvironmentFile=/opt/mcp-gitlab-gateway/.env
+ExecStart=/usr/bin/node /opt/mcp-gitlab-gateway/node_modules/.bin/mcp-gitlab
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=mcp-gitlab-upstream
+
+[Install]
+WantedBy=multi-user.target</code></pre>
+    </div>
+
+    <h3>Service 2 — Gateway proxy</h3>
+    <pre><code>sudo <span class="cmd">nano</span> /etc/systemd/system/mcp-gitlab-gateway.service</code></pre>
+    <div class="file-block">
+      <div class="file-label">/etc/systemd/system/mcp-gitlab-gateway.service</div>
+      <pre style="margin:0; border:none; padding:0; background:transparent;"><code>[Unit]
+Description=GitLab MCP Gateway (HTTP proxy)
+After=network.target mcp-gitlab-upstream.service
+Requires=mcp-gitlab-upstream.service
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/opt/mcp-gitlab-gateway
+Environment=PORT=8808
+Environment=UPSTREAM_PORT=3002
+EnvironmentFile=/opt/mcp-gitlab-gateway/.env
+ExecStart=/usr/bin/node /opt/mcp-gitlab-gateway/server.js
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=mcp-gitlab-gateway
+
+[Install]
+WantedBy=multi-user.target</code></pre>
+    </div>
+
+    <p>Enable and start both services:</p>
+    <pre><code>sudo <span class="cmd">systemctl</span> daemon-reload
+sudo <span class="cmd">systemctl</span> enable mcp-gitlab-upstream mcp-gitlab-gateway
+sudo <span class="cmd">systemctl</span> start mcp-gitlab-upstream
+
+<span class="comment"># Wait a couple of seconds for upstream to be ready, then start gateway</span>
+<span class="cmd">sleep</span> 3
+sudo <span class="cmd">systemctl</span> start mcp-gitlab-gateway</code></pre>
+
+    <p>Check both are running:</p>
+    <pre><code>sudo <span class="cmd">systemctl</span> status mcp-gitlab-upstream
+sudo <span class="cmd">systemctl</span> status mcp-gitlab-gateway
+
+<span class="comment"># Follow live logs</span>
+sudo <span class="cmd">journalctl</span> <span class="flag">-u</span> mcp-gitlab-upstream <span class="flag">-f</span>
+sudo <span class="cmd">journalctl</span> <span class="flag">-u</span> mcp-gitlab-gateway <span class="flag">-f</span></code></pre>
+
+    <div class="success">Upstream log should show: <code>GitLab MCP Server running with Streamable HTTP transport</code> and <code>Endpoint: http://127.0.0.1:3002/mcp</code></div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- STEP 6 -->
+  <div class="step" id="s6">
+    <div class="step-header">
+      <div class="step-num">6</div>
+      <div class="step-title">Configure nginx reverse proxy</div>
+    </div>
+    <p>Add a new nginx site. Replace <code>mcp-gitlab.np-gitlab.swedencentral.cloudapp.azure.com</code> with whatever hostname or IP you want to use.</p>
+    <pre><code>sudo <span class="cmd">nano</span> /etc/nginx/sites-available/mcp-gitlab-gateway</code></pre>
+    <div class="file-block">
+      <div class="file-label">/etc/nginx/sites-available/mcp-gitlab-gateway</div>
+      <pre style="margin:0; border:none; padding:0; background:transparent;"><code>server {
+    listen 443 ssl;
+    server_name mcp-gitlab.np-gitlab.swedencentral.cloudapp.azure.com;
+
+    <span class="comment"># Use the same cert as GitLab, or get a new one with certbot</span>
+    ssl_certificate     /etc/ssl/certs/gitlab.crt;
+    ssl_certificate_key /etc/ssl/private/gitlab.key;
+
+    location /mcp {
+        proxy_pass         http://127.0.0.1:8808;
+        proxy_http_version 1.1;
+
+        <span class="comment"># Required for SSE / streaming responses</span>
+        proxy_buffering    off;
+        proxy_cache        off;
+        proxy_read_timeout 86400s;
+        proxy_send_timeout 86400s;
+
+        <span class="comment"># Tell nginx not to buffer even if misconfigured</span>
+        add_header X-Accel-Buffering no;
+
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /health {
+        proxy_pass http://127.0.0.1:8808;
+    }
+}
+
+<span class="comment"># Redirect HTTP to HTTPS</span>
+server {
+    listen 80;
+    server_name mcp-gitlab.np-gitlab.swedencentral.cloudapp.azure.com;
+    return 301 https://$host$request_uri;
+}</code></pre>
+    </div>
+
+    <div class="warn">If you don't have a named subdomain, you can skip the <code>server_name</code> line and use the VM's public IP directly. In that case, use a self-signed cert or skip TLS for internal-only use.</div>
+
+    <p>Enable the site and reload nginx:</p>
+    <pre><code>sudo <span class="cmd">ln</span> <span class="flag">-s</span> /etc/nginx/sites-available/mcp-gitlab-gateway /etc/nginx/sites-enabled/
+sudo <span class="cmd">nginx</span> <span class="flag">-t</span>        <span class="comment"># test config — must say "syntax is ok"</span>
+sudo <span class="cmd">systemctl</span> reload nginx</code></pre>
+  </div>
+
+  <hr class="divider">
+
+  <!-- STEP 7 -->
+  <div class="step" id="s7">
+    <div class="step-header">
+      <div class="step-num">7</div>
+      <div class="step-title">Open the Azure firewall port</div>
+    </div>
+    <p>If port 443 is not already open on the VM's Network Security Group (it should be if GitLab is already HTTPS), no action is needed. Verify in the Azure Portal:</p>
+    <ul>
+      <li>Go to <strong>Azure Portal → Virtual Machines → your VM → Networking</strong></li>
+      <li>Check <strong>Inbound port rules</strong></li>
+      <li>Confirm there is a rule allowing <strong>TCP 443</strong> from any source (or from your specific IPs)</li>
+    </ul>
+    <div class="note">Port 8808 does <strong>not</strong> need to be open externally — nginx handles TLS on 443 and proxies internally to 8808.</div>
+    <p>If port 443 is missing, add it:</p>
+    <pre><code><span class="comment"># Using Azure CLI (if installed)</span>
+<span class="cmd">az</span> network nsg rule create \
+  <span class="flag">--resource-group</span> YOUR_RESOURCE_GROUP \
+  <span class="flag">--nsg-name</span> YOUR_NSG_NAME \
+  <span class="flag">--name</span> AllowHTTPS \
+  <span class="flag">--priority</span> 300 \
+  <span class="flag">--protocol</span> Tcp \
+  <span class="flag">--destination-port-range</span> 443 \
+  <span class="flag">--access</span> Allow</code></pre>
+  </div>
+
+  <hr class="divider">
+
+  <!-- STEP 8 -->
+  <div class="step" id="s8">
+    <div class="step-header">
+      <div class="step-num">8</div>
+      <div class="step-title">Verify end-to-end</div>
+    </div>
+    <p>From your local machine, test the full stack:</p>
+
+    <h3>1. Health check</h3>
+    <pre><code><span class="cmd">curl</span> https://mcp-gitlab.np-gitlab.swedencentral.cloudapp.azure.com/health</code></pre>
+    <p>Expected: <code>{"status":"ok","upstream":"127.0.0.1:3002"}</code></p>
+
+    <h3>2. MCP initialize handshake</h3>
+    <pre><code><span class="cmd">curl</span> <span class="flag">-s</span> <span class="flag">-X POST</span> \
+  <span class="str">"https://mcp-gitlab.np-gitlab.swedencentral.cloudapp.azure.com/mcp?token=YOUR_GITLAB_PAT"</span> \
+  <span class="flag">-H</span> <span class="str">"Content-Type: application/json"</span> \
+  <span class="flag">-H</span> <span class="str">"Accept: application/json, text/event-stream"</span> \
+  <span class="flag">-d</span> <span class="str">'{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}'</span></code></pre>
+    <p>Expected response:</p>
+    <pre><code>event: message
+data: {"result":{"protocolVersion":"2024-11-05","capabilities":{"tools":{}},"serverInfo":{"name":"better-gitlab-mcp-server","version":"2.1.16"}},"jsonrpc":"2.0","id":1}</code></pre>
+
+    <h3>3. Connect from Notion</h3>
+    <p>In Notion → <strong>Settings → Connections → Add MCP Server</strong>, use:</p>
+    <div class="final-url">https://mcp-gitlab.np-gitlab.swedencentral.cloudapp.azure.com/mcp?token=USER_GITLAB_PAT</div>
+    <p>Each user enters their own GitLab Personal Access Token in the URL. Tokens need at least <strong>read_api</strong> scope; <strong>api</strong> scope for write operations.</p>
+
+    <div class="success">If the health check passes and the MCP handshake returns a valid response, the deployment is complete.</div>
+
+    <h3>Useful commands for ongoing operations</h3>
+    <pre><code><span class="comment"># Restart after code changes</span>
+sudo <span class="cmd">systemctl</span> restart mcp-gitlab-upstream mcp-gitlab-gateway
+
+<span class="comment"># Pull latest code and restart</span>
+<span class="cmd">cd</span> /opt/mcp-gitlab-gateway
+sudo <span class="cmd">git</span> pull
+sudo <span class="cmd">systemctl</span> restart mcp-gitlab-upstream mcp-gitlab-gateway
+
+<span class="comment"># View logs</span>
+sudo <span class="cmd">journalctl</span> <span class="flag">-u</span> mcp-gitlab-gateway <span class="flag">-n</span> 50
+sudo <span class="cmd">journalctl</span> <span class="flag">-u</span> mcp-gitlab-upstream <span class="flag">-n</span> 50
+
+<span class="comment"># Check both services at once</span>
+sudo <span class="cmd">systemctl</span> status mcp-gitlab-upstream mcp-gitlab-gateway</code></pre>
+  </div>
+
+</div>
+</body>
+</html>
