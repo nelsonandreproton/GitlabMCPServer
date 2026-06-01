@@ -1,0 +1,13 @@
+# Logs (local dev artifacts — never deploy or commit these)
+*.log
+
+# Secrets
+.env
+*_tokens.json
+
+# Node
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,22 @@
+# @zereight/mcp-gitlab upstream — pinned and baked at build time.
+#
+# Runs in streamable-http + remote-auth mode. All flags are passed via env vars
+# (the package reads flags ONLY from env, not CLI args). Per-request GitLab token
+# arrives in the Authorization header, injected by the gateway.
+
+FROM node:24-slim
+
+# Pin to the version verified in the local handshake.
+ARG ZEREIGHT_VERSION=2.1.18
+
+# Bake the package into the image (no runtime npx download).
+RUN npm install -g @zereight/mcp-gitlab@${ZEREIGHT_VERSION}
+
+# Non-root (uid 1000)
+RUN useradd -u 1000 -m appuser
+USER appuser
+
+EXPOSE 3002
+
+# The global bin installed by the package.
+CMD ["mcp-gitlab"]
