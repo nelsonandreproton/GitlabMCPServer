@@ -15,10 +15,16 @@
 
 const http = require("http");
 const { URL } = require("url");
+const { UsageTracker } = require("./usage.js");
 
 const PORT = parseInt(process.env.PORT || "8808", 10);
 const UPSTREAM_PORT = parseInt(process.env.UPSTREAM_PORT || "3002", 10);
 const UPSTREAM_HOST = process.env.UPSTREAM_HOST || "127.0.0.1";
+
+// Anonymous daily usage tracking. Path should point at a Docker named volume so
+// counts survive container recreation on deploy. Defaults to cwd for local dev.
+const STATS_FILE = process.env.STATS_FILE || "./usage-stats.json";
+const usage = new UsageTracker(STATS_FILE);
 
 function proxyRequest(req, res, token) {
   const upstreamOptions = {
@@ -58,6 +64,14 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Anonymous usage stats: { "YYYY-MM-DD": distinctUserCount }. No token needed
+  // to read, and only counts are exposed — never the underlying token hashes.
+  if (url.pathname === "/stats") {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify(usage.stats()));
+    return;
+  }
+
   if (url.pathname !== "/mcp") {
     res.writeHead(404);
     res.end("Not found");
@@ -69,6 +83,13 @@ const server = http.createServer((req, res) => {
     res.writeHead(401, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ error: "Missing ?token= query parameter" }));
     return;
+  }
+
+  // Record anonymous usage. Never let a tracking error break the proxy.
+  try {
+    usage.record(token);
+  } catch (err) {
+    console.error(`[usage] tracking failed: ${err.message}`);
   }
 
   proxyRequest(req, res, token);

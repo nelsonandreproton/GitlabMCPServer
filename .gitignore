@@ -11,3 +11,6 @@ node_modules/
 # OS
 .DS_Store
 Thumbs.db
+
+# Usage stats (runtime data, lives on volume in prod)
+usage-stats.json

@@ -9,7 +9,7 @@ FROM node:24-slim
 
 WORKDIR /app
 
-COPY server.js ./
+COPY server.js usage.js ./
 
 # node:24-slim already ships a non-root "node" user at uid 1000.
 USER node

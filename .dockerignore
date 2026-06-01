@@ -3,6 +3,8 @@
 .env
 node_modules
 start.bat
+*.test.js
 test-spawn.js
 deploy.html
+usage-stats.json
 *.md
