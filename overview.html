@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GitlabMCPServer — Overview</title>
+  <style>
+    :root{--bg:#0f1117;--surface:#1a1d27;--surface2:#222636;--border:#2e3347;--accent:#6c8aff;--accent2:#a78bfa;--green:#34d399;--yellow:#fbbf24;--red:#f87171;--orange:#fb923c;--cyan:#22d3ee;--text:#e2e8f0;--muted:#8892a4;--radius:10px;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;line-height:1.6;}
+    a{color:var(--accent);text-decoration:none;}
+    .page{max-width:1100px;margin:0 auto;padding:40px 24px 80px;}
+    header{text-align:center;padding:48px 0 36px;border-bottom:1px solid var(--border);margin-bottom:48px;}
+    header h1{font-size:2.4rem;font-weight:700;}header h1 span{color:var(--accent);}
+    header p{color:var(--muted);margin-top:10px;font-size:1.05rem;}
+    .badge{display:inline-block;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px 14px;font-size:0.8rem;color:var(--muted);margin:8px 4px 0;}
+    .badge.green{border-color:var(--green);color:var(--green);}.badge.blue{border-color:var(--accent);color:var(--accent);}.badge.orange{border-color:var(--orange);color:var(--orange);}.badge.purple{border-color:var(--accent2);color:var(--accent2);}
+    h2{font-size:1.35rem;font-weight:600;color:var(--accent);margin-bottom:20px;display:flex;align-items:center;gap:10px;}
+    h2::after{content:'';flex:1;height:1px;background:var(--border);}
+    h3{font-size:1rem;font-weight:600;margin-bottom:8px;}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;}
+    .card+.card{margin-top:16px;}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+    @media(max-width:720px){.grid-2{grid-template-columns:1fr;}}
+    .flow{display:flex;align-items:center;gap:0;flex-wrap:wrap;margin-bottom:8px;}
+    .flow-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:0.83rem;text-align:center;min-width:100px;}
+    .flow-box small{display:block;color:var(--muted);font-size:0.72rem;margin-top:2px;}
+    .flow-box.accent{border-color:var(--accent);color:var(--accent);}.flow-box.green{border-color:var(--green);color:var(--green);}.flow-box.orange{border-color:var(--orange);color:var(--orange);}
+    .flow-arrow{color:var(--muted);font-size:1.2rem;padding:0 8px;}
+    .param-grid{display:grid;grid-template-columns:auto 1fr;gap:6px 18px;font-size:0.88rem;}
+    .param-grid .label{color:var(--muted);white-space:nowrap;}.param-grid .val{color:var(--text);font-family:monospace;}
+    .tag{display:inline-block;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:2px 9px;font-size:0.78rem;color:var(--muted);margin:3px 2px;}
+    section{margin-bottom:52px;}
+  </style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1><span>Gitlab</span>MCPServer</h1>
+    <p>HTTP gateway exposing GitLab MCP tools over a URL — built for Notion's URL-only MCP client</p>
+    <div>
+      <span class="badge blue">Node.js</span>
+      <span class="badge purple">@zereight/mcp-gitlab</span>
+      <span class="badge orange">Docker + Caddy</span>
+      <span class="badge green">Deployed (Hetzner + sslip)</span>
+    </div>
+  </header>
+
+  <section>
+    <h2>1. What this project does</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Purpose</h3>
+        <p style="color:var(--muted);font-size:0.9rem;margin-bottom:12px;">
+          A thin Node.js proxy that lets URL-only MCP clients (Notion) reach a
+          GitLab MCP server. Notion can only supply a URL — no custom headers —
+          so the gateway reads the user's GitLab Personal Access Token from
+          <code>?token=</code> in the query string and forwards it as an
+          <code>Authorization: Bearer</code> header to the upstream
+          <code>@zereight/mcp-gitlab</code> running in remote-auth mode. Each
+          colleague connects with their own PAT and acts as themselves in GitLab.
+        </p>
+        <div>
+          <span class="tag">Per-user PAT injection</span><span class="tag">Streamable HTTP / SSE</span>
+          <span class="tag">Anonymous usage stats</span><span class="tag">Zero runtime deps</span>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Stack</h3>
+        <div class="param-grid">
+          <span class="label">Runtime</span><span class="val">Node.js 24 (stdlib only)</span>
+          <span class="label">Upstream</span><span class="val">@zereight/mcp-gitlab@2.1.18 (pinned)</span>
+          <span class="label">Proxy</span><span class="val">server.js — http module</span>
+          <span class="label">Container</span><span class="val">Docker, two compose services</span>
+          <span class="label">TLS / proxy</span><span class="val">Caddy + Let's Encrypt (sslip.io)</span>
+          <span class="label">Tests</span><span class="val">node --test (pure stdlib)</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>2. Request flow</h2>
+    <div class="card">
+      <div style="overflow-x:auto;"><div style="min-width:640px;">
+        <div class="flow">
+          <div class="flow-box accent"><strong>Notion</strong><small>POST /mcp?token=PAT</small></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box"><strong>Caddy</strong><small>TLS, sslip subdomain</small></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box orange"><strong>Gateway</strong><small>server.js :8808</small></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box"><strong>Upstream</strong><small>:3002 remote-auth</small></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box green"><strong>GitLab API</strong></div>
+        </div>
+      </div></div>
+      <p style="color:var(--muted);font-size:0.85rem;margin-top:12px;">
+        The gateway turns <code>?token=PAT</code> into <code>Authorization: Bearer PAT</code>.
+        Notion auth must be set to <strong>None</strong> — the header-based "API key" option is ignored.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <h2>3. Anonymous usage tracking</h2>
+    <div class="card">
+      <p style="color:var(--muted);font-size:0.9rem;margin-bottom:12px;">
+        Counts <strong>distinct users per day</strong> without storing identity.
+        Each token is SHA-256 hashed (one-way — raw tokens never touch disk) and
+        deduplicated per UTC day. Read counts at <code>GET /stats</code>; only
+        counts are exposed, never the hashes. State persists on a Docker named
+        volume so it survives redeploys.
+      </p>
+      <div class="param-grid">
+        <span class="label">Endpoint</span><span class="val">GET /stats → {"2026-06-01": 5}</span>
+        <span class="label">Storage</span><span class="val">STATS_FILE on named volume</span>
+        <span class="label">Privacy</span><span class="val">SHA-256(token), no raw token stored</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>4. Configuration</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Gateway (server.js)</h3>
+        <div class="param-grid">
+          <span class="label">PORT</span><span class="val">8808</span>
+          <span class="label">UPSTREAM_HOST</span><span class="val">gitlab-mcp-upstream</span>
+          <span class="label">UPSTREAM_PORT</span><span class="val">3002</span>
+          <span class="label">STATS_FILE</span><span class="val">/data/usage-stats.json</span>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Upstream (@zereight/mcp-gitlab)</h3>
+        <div class="param-grid">
+          <span class="label">GITLAB_API_URL</span><span class="val">&lt;instance&gt;/api/v4</span>
+          <span class="label">GITLAB_PERSONAL_ACCESS_TOKEN</span><span class="val">placeholder</span>
+          <span class="label">STREAMABLE_HTTP</span><span class="val">true</span>
+          <span class="label">REMOTE_AUTHORIZATION</span><span class="val">true</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>5. Deployment</h2>
+    <div class="card">
+      <div class="param-grid">
+        <span class="label">Host</span><span class="val">Hetzner homeserver (Docker Compose)</span>
+        <span class="label">Services</span><span class="val">gitlab-mcp-upstream + gitlab-mcp-gateway</span>
+        <span class="label">User</span><span class="val">node (uid 1000)</span>
+        <span class="label">Volume</span><span class="val">gitlab_mcp_data → /data</span>
+        <span class="label">Restart</span><span class="val">unless-stopped</span>
+        <span class="label">Public URL</span><span class="val">gitlab-mcp.89-167-52-126.sslip.io/mcp?token=PAT</span>
+      </div>
+      <p style="color:var(--muted);font-size:0.85rem;margin-top:12px;">
+        Three-repo change model (GitlabMCPServer · homeserver · CNCSearch) — all
+        changes committed and pushed, never edited on the server, because
+        <code>deploy.sh</code> does <code>git reset --hard</code>.
+      </p>
+    </div>
+  </section>
+
+  <footer style="border-top:1px solid var(--border);padding-top:20px;text-align:center;color:var(--muted);font-size:0.82rem;">
+    GitlabMCPServer &nbsp;·&nbsp; GitLab MCP over HTTP for Notion &nbsp;·&nbsp; <a href="../index.html">← All Projects</a>
+  </footer>
+</div>
+</body>
+</html>
