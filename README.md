@@ -71,7 +71,7 @@ curl -s -X POST "http://localhost:8808/mcp?token=YOUR_GITLAB_PAT" \
 Expected response:
 ```
 event: message
-data: {"result":{"protocolVersion":"2024-11-05","capabilities":{"tools":{}},"serverInfo":{"name":"better-gitlab-mcp-server","version":"2.1.16"}},"jsonrpc":"2.0","id":1}
+data: {"result":{"protocolVersion":"2024-11-05","capabilities":{"tools":{}},"serverInfo":{"name":"better-gitlab-mcp-server","version":"2.1.18"}},"jsonrpc":"2.0","id":1}
 ```
 
 ## Environment variables
@@ -83,6 +83,7 @@ data: {"result":{"protocolVersion":"2024-11-05","capabilities":{"tools":{}},"ser
 | `PORT` | `8808` | Gateway listening port |
 | `UPSTREAM_PORT` | `3002` | Upstream port |
 | `UPSTREAM_HOST` | `127.0.0.1` | Upstream host |
+| `STATS_FILE` | `./usage-stats.json` | Path for anonymous usage stats (put on a persistent volume in prod) |
 
 ### Upstream (`@zereight/mcp-gitlab`)
 
@@ -106,25 +107,49 @@ https://your-host/mcp?token=YOUR_GITLAB_PAT
 
 The token needs at minimum `read_api` scope. Use `api` scope for write operations (creating issues, MRs, etc.).
 
+## Anonymous usage tracking
+
+The gateway counts **distinct users per day** without storing who. Each request's
+token is hashed (SHA-256, one-way — the raw token is never written to disk) and
+deduplicated per UTC day.
+
+Read the counts (no token required):
+
+```bash
+curl https://your-host/stats
+# {"2026-06-01": 5, "2026-06-02": 8}
+```
+
+Only counts are exposed — never the underlying hashes. State persists to
+`STATS_FILE`, which should live on a persistent volume so it survives redeploys.
+Run the tests with `node --test` (pure stdlib, no dependencies).
+
 ## Production deployment
 
-See [`deploy.html`](deploy.html) for the full step-by-step guide to deploying on Linux with systemd + nginx + TLS.
+Deployed via Docker on the Hetzner homeserver (`@zereight/mcp-gitlab` upstream +
+gateway as two compose services), behind Caddy with an automatic Let's Encrypt
+cert on an `sslip.io` hostname. See `Dockerfile`, `Dockerfile.upstream`, and the
+project memory for the exact homeserver wiring.
 
-Summary:
-1. Install Node.js 18+
-2. Clone this repo to `/opt/mcp-gitlab-gateway`
-3. `npm install @zereight/mcp-gitlab`
-4. Create `/opt/mcp-gitlab-gateway/.env` with the env vars above
-5. Install both systemd services (see `deploy.html`)
-6. Configure nginx with `proxy_buffering off` and `proxy_read_timeout 86400s`
-7. Open port 443 in your Azure NSG
+Key points:
+- Bake `@zereight/mcp-gitlab` into the upstream image (pinned version) — do not
+  `npx -y` at runtime.
+- Gateway needs `UPSTREAM_HOST=<upstream-service-name>` to reach the sibling
+  container; the default `127.0.0.1` only works when both run on the same host.
+- Mount a named volume for `STATS_FILE`, owned by the `node` user (uid 1000).
+- Caddy: `reverse_proxy gateway:8808` on a dedicated `sslip.io` subdomain — Caddy
+  issues the TLS cert automatically.
+- Drop `NODE_TLS_REJECT_UNAUTHORIZED=0` if your GitLab cert is publicly trusted.
 
 ## Files
 
 | File | Description |
 |---|---|
-| `server.js` | Gateway proxy (~70 lines) |
+| `server.js` | Gateway proxy |
+| `usage.js` | Anonymous daily usage tracking |
+| `usage.test.js` | Tests for usage tracking (`node --test`) |
+| `Dockerfile` | Gateway image |
+| `Dockerfile.upstream` | `@zereight/mcp-gitlab` upstream image (pinned) |
 | `start.bat` | Windows launcher (starts both processes) |
 | `test-body.json` | MCP initialize payload for curl testing |
-| `deploy.html` | Full Linux/Azure deployment guide |
 | `CLAUDE.md` | Claude Code context (for AI-assisted development) |
