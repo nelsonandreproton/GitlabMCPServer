@@ -11,9 +11,8 @@ WORKDIR /app
 
 COPY server.js ./
 
-# Non-root (uid 1000)
-RUN useradd -u 1000 -m appuser
-USER appuser
+# node:24-slim already ships a non-root "node" user at uid 1000.
+USER node
 
 EXPOSE 8808
 
